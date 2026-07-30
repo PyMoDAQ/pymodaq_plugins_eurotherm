@@ -6,26 +6,25 @@ h5exporters = false  # true if plugin contains custom h5 file exporters
 scanners = false  # true if plugin contains custom scan layout (daq_scan extensions)
 
 [urls]
-package-url = 'https://github.com/PyMoDAQ/pymodaq_plugins_template' #todo modify url by your plugin url
+package-url = 'https://github.com/PyMoDAQ/pymodaq_plugins_eurotherm'
 
 [project]
-name = "pymodaq_plugins_template" #todo modify template by your plugin short name
+name = "pymodaq_plugins_eurotherm"
 description = 'some word about your plugin'
 dependencies = [
     "pymodaq>=5.2.0",
     "pymodaq_utils>=5.2.0",
     "pymodaq_gui>=5.2.0",
     "pymodaq_data>=5.2.0",
-    #todo: list here all dependencies your package may have
+    "nupylab @ git+https://github.com/hailegroup/nupylab.git",
+    "pymodaq_plugins_utils[serial]"
 ]
 
 authors = [
-    {name = "Name Surname", email = "myname@test.fr"},
-    #todo: list here all authors of your plugin
+    {name = "Weber J. Sebastien", email = "sebastien.weber@cnrs.fr"},
 ]
 maintainers = [
-    {name = "Name Surname", email = "myname@test.fr"},
-    #todo: list here all maintainers of your plugin
+    {name = "Weber J. Sebastien", email = "sebastien.weber@cnrs.fr"},
 ]
 
 # nottodo: leave everything below as is!
@@ -60,6 +59,9 @@ requires = [
 build-backend = "hatchling.build"
 
 [tool.hatch.metadata.hooks.custom]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.version]
 source = "vcs"

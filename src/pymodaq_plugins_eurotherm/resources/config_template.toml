@@ -1,2 +1,6 @@
 title = 'this is the configuration file of the plugin XXX'
 
+
+port = 'COM1'
+clientaddress = 0
+baudrate = 9600
