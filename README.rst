@@ -37,7 +37,7 @@ Below is the list of instruments included in this plugin
 Actuators
 +++++++++
 
-* **Eurotherm3200Series**: Control the 3200 temperature controller Series
+* **Eurotherm3200Series**: Control the 3200 temperature controller Series. Ongoing Work!
 
 PID Models
 ==========
