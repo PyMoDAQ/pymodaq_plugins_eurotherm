@@ -114,3 +114,5 @@ venv.bak/
 
 *yacctab.py
 *lextab.py
+src/pymodaq_plugins_eurotherm/.DS_Store
+.DS_Store
