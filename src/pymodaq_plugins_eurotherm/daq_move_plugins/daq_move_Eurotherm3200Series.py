@@ -1,4 +1,4 @@
-eee
+
 from typing import Union, List, Dict
 from pymodaq_utils.config import GlobalConfig
 
@@ -188,4 +188,4 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
 
 
 if __name__ == '__main__':
-    main(__file__)
+    main(__file__, init=False)
