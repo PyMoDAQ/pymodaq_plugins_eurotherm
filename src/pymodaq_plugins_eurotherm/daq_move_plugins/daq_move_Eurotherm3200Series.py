@@ -50,7 +50,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
 
     params = [
         {'title': 'ComPort:', 'name': 'port', 'type': 'list', 'limits': list_resources(), 'value': config('eurotherm', 'port')},
-        {'title': 'Client Address', 'name': 'clientaddress', 'type': 'int', 'value':config('eurotherm', 'clientaddress')},
+        {'title': 'Client Address', 'name': 'clientaddress', 'type': 'int', 'value': config('eurotherm', 'clientaddress')},
         {'title': 'BaudRate:', 'name': 'baudrate', 'type': 'int', 'value': config('eurotherm', 'baudrate'),},
              ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
 
@@ -64,9 +64,8 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         -------
         float: The position obtained after scaling conversion.
         """
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        pos = DataActuator(data=self.controller.your_method_to_get_the_actuator_value(),  # when writing your own plugin replace this line
+
+        pos = DataActuator(data=self.controller.read_float(),  # when writing your own plugin replace this line
                            units=self.axis_unit)
         pos = self.get_position_with_scaling(pos)
         return pos
@@ -128,7 +127,8 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
             False if initialization failed otherwise True
         """
         if self.is_master:  # is needed when controller is master
-            self.controller = Eurotherm3216()
+            self.controller = Eurotherm3216(port=self.settings['port'],
+                                            clientaddress=self.settings['clientaddress'],)
             initialized = True
 
         else:
