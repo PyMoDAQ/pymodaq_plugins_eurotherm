@@ -14,13 +14,10 @@ except ImportError:
 
 from pymodaq_utils.utils import ThreadCommand  # object used to send info back to the main thread
 from pymodaq_gui.parameter import Parameter
-
 from pymodaq_plugins_utils.hardware.serial_ports import list_resources
-
 from nupylab.drivers.eurotherm3216 import Eurotherm3216
 
 config = GlobalConfig()
-
 
 class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
     """ Instrument plugin class for an actuator.
@@ -39,7 +36,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
     is_multiaxes = True
     _axis_names: Union[List[str], Dict[str, int]] = dict(zip([f'Segment_{ind:03.0f}' for ind in range(8)],
                                                                [ind for ind in range(8)]))
-    _controller_units: Union[str, List[str]] = 'K'
+    _controller_units: Union[str, List[str]] = '°C'
     _epsilon: Union[float, List[float]] = 0.1
 
     data_actuator_type = DataActuatorType.DataActuator
@@ -64,10 +61,11 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         -------
         float: The position obtained after scaling conversion.
         """
-
-        pos = DataActuator(data=self.controller.read_float(),  # when writing your own plugin replace this line
+        temp_value = self.controller.process_value
+        pos = DataActuator(data=temp_value,
                            units=self.axis_unit)
         pos = self.get_position_with_scaling(pos)
+        #pas compris scaling conversion
         return pos
 
     def user_condition_to_reach_target(self) -> bool:
@@ -86,11 +84,9 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
 
     def close(self):
         """Terminate the communication protocol"""
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
         if self.is_master:
-            #  self.controller.your_method_to_terminate_the_communication()  # when writing your own plugin replace this line
-            ...
+            self.move_home()
+            self.controller.serial.close()
 
     def commit_settings(self, param: Parameter):
         """Apply the consequences of a change of value in the detector settings
@@ -145,13 +141,10 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         ----------
         value: (float) value of the absolute target positioning
         """
-
         value = self.check_bound(value)  #if user checked bounds, the defined bounds are applied here
         self.target_value = value
         value = self.set_position_with_scaling(value)  # apply scaling if the user specified one
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        self.controller.your_method_to_set_an_absolute_value(value.value(self.axis_unit))  # when writing your own plugin replace this line
+        self.controller.target_setpoint = value.value(self.axis_unit)
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
 
     def move_rel(self, value: DataActuator):
@@ -164,28 +157,19 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         value = self.check_bound(self.current_value + value) - self.current_value
         self.target_value = value + self.current_value
         value = self.set_position_relative_with_scaling(value)
-
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        self.controller.your_method_to_set_a_relative_value(value.value(self.axis_unit))  # when writing your own plugin replace this line
+        self.controller.target_setpoint = self.target_value.value(self.axis_unit)
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
 
     def move_home(self):
         """Call the reference method of the controller"""
-
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        self.controller.your_method_to_get_to_a_known_reference()  # when writing your own plugin replace this line
+        self.controller.target_setpoint = 27
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
 
     def stop_motion(self):
         """Stop the actuator and emits move_done signal"""
-
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        self.controller.your_method_to_stop_positioning()  # when writing your own plugin replace this line
+        temp_value = self.controller.process_value
+        self.controller.target_setpoint  = temp_value
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
-
 
 if __name__ == '__main__':
     main(__file__, init=False)
