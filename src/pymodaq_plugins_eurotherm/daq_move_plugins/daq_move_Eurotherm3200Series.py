@@ -19,6 +19,10 @@ from nupylab.drivers.eurotherm3216 import Eurotherm3216
 
 config = GlobalConfig()
 
+KP_ADDRESS = 6
+KI_ADDRESS = 8
+KD_ADDRESS = 9
+
 class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
     """ Instrument plugin class for an actuator.
     
@@ -49,6 +53,13 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         {'title': 'ComPort:', 'name': 'port', 'type': 'list', 'limits': list_resources(), 'value': config('eurotherm', 'port')},
         {'title': 'Client Address', 'name': 'clientaddress', 'type': 'int', 'value': config('eurotherm', 'clientaddress')},
         {'title': 'BaudRate:', 'name': 'baudrate', 'type': 'int', 'value': config('eurotherm', 'baudrate'),},
+         {'title': 'PID:', 'name': 'pid', 'type': 'group', 'children': [
+             {'title': 'Kp', 'name': 'kp', 'type': 'float', 'value': 1.},
+            {'title': 'Ki', 'name': 'ki', 'type': 'float', 'value': 1.},
+            {'title': 'Kd', 'name': 'kd', 'type': 'float', 'value': 1.},
+         ],},
+
+
              ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
 
     def ini_attributes(self):
@@ -65,7 +76,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         pos = DataActuator(data=temp_value,
                            units=self.axis_unit)
         pos = self.get_position_with_scaling(pos)
-        #pas compris scaling conversion
+
         return pos
 
     def user_condition_to_reach_target(self) -> bool:
@@ -85,8 +96,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
     def close(self):
         """Terminate the communication protocol"""
         if self.is_master:
-            self.move_home()
-            self.controller.serial.close()
+            self.move_abs(DataActuator(self._title, data=30))
 
     def commit_settings(self, param: Parameter):
         """Apply the consequences of a change of value in the detector settings
@@ -96,17 +106,17 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         param: Parameter
             A given parameter (within detector_settings) whose value has been changed by the user
         """
-        ## TODO for your custom plugin
-        if param.name() == 'axis':
-            self.axis_unit = self.controller.your_method_to_get_correct_axis_unit()
-            # do this only if you can and if the units are not known beforehand, for instance
-            # if the motors connected to the controller are of different type (mm, µm, nm, , etc...)
-            # see BrushlessDCMotor from the thorlabs plugin for an exemple
+        if param.name() == 'kp' :
+            self.controller.write_float(registeraddress=KP_ADDRESS, val= param.value())
+        elif param.name() == 'ki' :
+            self.controller.write_float(registeraddress=KI_ADDRESS, val= param.value())
+        elif param.name() == 'kd' :
+            self.controller.write_float(registeraddress=KD_ADDRESS, val= param.value())
 
-        elif param.name() == "a_parameter_you've_added_in_self.params":
-           self.controller.your_method_to_apply_this_param_change()
-        else:
-            pass
+    def update_pid(self):
+        self.settings.child('pid', 'kp').setValue(self.controller.read_float(KP_ADDRESS))
+        self.settings.child('pid', 'ki').setValue(self.controller.read_float(KI_ADDRESS))
+        self.settings.child('pid', 'kd').setValue(self.controller.read_float(KD_ADDRESS))
 
     def ini_stage(self, controller=None):
         """Actuator communication initialization
@@ -123,14 +133,18 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
             False if initialization failed otherwise True
         """
         if self.is_master:  # is needed when controller is master
-            self.controller = Eurotherm3216(port=self.settings['port'],
-                                            clientaddress=self.settings['clientaddress'],)
+            # self.controller = Eurotherm3216(port=self.settings['port'],
+            #                                 clientaddress=self.settings['clientaddress'],)
+            self.controller = None
             initialized = True
 
         else:
             self.controller = controller
             initialized = True
 
+        self.settings.child('scaling','use_scaling').setValue(True)
+        self.settings.child('scaling','offset').setValue(273)
+        self.update_pid()
         info = "Whatever info you want to log"
         return info, initialized
 
