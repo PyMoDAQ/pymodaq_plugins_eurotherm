@@ -114,9 +114,9 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
             self.controller.write_float(registeraddress=KD_ADDRESS, val= param.value())
 
     def update_pid(self):
-        self.settings.child('pid', 'kp').setValue(self.controller.read_float(KP_ADDRESS))
-        self.settings.child('pid', 'ki').setValue(self.controller.read_float(KI_ADDRESS))
-        self.settings.child('pid', 'kd').setValue(self.controller.read_float(KD_ADDRESS))
+        self.settings.child('pid', 'kp').setValue(self.controller.read_float(registeraddress=KP_ADDRESS))
+        self.settings.child('pid', 'ki').setValue(self.controller.read_float(registeraddress=KI_ADDRESS))
+        self.settings.child('pid', 'kd').setValue(self.controller.read_float(registeraddress=KD_ADDRESS))
 
     def ini_stage(self, controller=None):
         """Actuator communication initialization
@@ -132,10 +132,10 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         initialized: bool
             False if initialization failed otherwise True
         """
-        if self.is_master:  # is needed when controller is master
-            # self.controller = Eurotherm3216(port=self.settings['port'],
-            #                                 clientaddress=self.settings['clientaddress'],)
-            self.controller = None
+        if self.is_master:
+            self.controller = Eurotherm3216(port=self.settings['port'],
+                                             clientaddress=self.settings['clientaddress'],)
+
             initialized = True
 
         else:
@@ -158,7 +158,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         value = self.check_bound(value)  #if user checked bounds, the defined bounds are applied here
         self.target_value = value
         value = self.set_position_with_scaling(value)  # apply scaling if the user specified one
-        self.controller.target_setpoint = value.value(self.axis_unit)
+        self.controller.target_setpoint=value.value(self.axis_unit)
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
 
     def move_rel(self, value: DataActuator):
