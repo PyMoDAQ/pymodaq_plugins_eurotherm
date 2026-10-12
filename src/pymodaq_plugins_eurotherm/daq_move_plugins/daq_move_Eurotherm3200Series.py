@@ -1,5 +1,5 @@
 
-from typing import Union, List, Dict
+from typing import Union, List
 from pymodaq_utils.config import GlobalConfig
 
 
@@ -43,9 +43,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
          hardware library.
 
     """
-    is_multiaxes = True
-    _axis_names: Union[List[str], Dict[str, int]] = dict(zip([f'Segment_{ind:03.0f}' for ind in range(8)],
-                                                               [ind for ind in range(8)]))
+    is_multiaxes = False
     _controller_units: Union[str, List[str]] = '°C'
     _epsilon: Union[float, List[float]] = 0.1
 
@@ -69,7 +67,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
             {'title': 'Integral time (s)', 'name': 'integral_time', 'type': 'float', 'value': 1.},
             {'title': 'Derivative time (s)', 'name': 'derivative_time', 'type': 'float', 'value': 1.},
         ]},
-             ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
+             ] + comon_parameters_fun(is_multiaxes, epsilon=_epsilon)
 
     def ini_attributes(self):
         self.controller: Eurotherm3216 = None
@@ -108,9 +106,8 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         In remote mode, the last setpoint is stored as target setpoint before going back to the
         local setpoint, so that the temperature does not jump.
         """
-        if self.is_master:
-            self._use_target_setpoint()
-            self.controller.adapter.close()
+        self._use_target_setpoint()
+        self.controller.adapter.close()
 
     @property
     def remote_mode(self) -> bool:
@@ -141,7 +138,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
             self.controller.remote_setpoint = self._remote_value
 
     def _write_setpoint(self, value: float):
-        if self.remote_mode and self.is_master:
+        if self.remote_mode:
             self._remote_value = value
             self.controller.remote_setpoint = value
         else:
@@ -157,7 +154,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         """
         if param.name() in ('proportional_band', 'integral_time', 'derivative_time'):
             setattr(self.controller, param.name(), param.value())
-        elif param.name() == 'setpoint_mode' and self.is_master:
+        elif param.name() == 'setpoint_mode':
             if self.remote_mode:
                 self._use_remote_setpoint()
             else:
@@ -174,7 +171,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         Parameters
         ----------
         controller: (object)
-            custom object of a PyMoDAQ plugin (Slave case). None if only one actuator by controller (Master case)
+            Not used, the plugin has a single axis and always opens its own controller
 
         Returns
         -------
@@ -182,17 +179,12 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         initialized: bool
             False if initialization failed otherwise True
         """
-        if self.is_master:  # is needed when controller is master
-            adapter = SerialAdapter(self.settings['port'], baudrate=self.settings['baudrate'], timeout=1)
-            self.controller = Eurotherm3216(adapter, address=self.settings['clientaddress'])
-            initialized = True
-
-        else:
-            self.controller = controller
-            initialized = True
+        adapter = SerialAdapter(self.settings['port'], baudrate=self.settings['baudrate'], timeout=1)
+        self.controller = Eurotherm3216(adapter, address=self.settings['clientaddress'])
+        initialized = True
 
         self.update_pid()
-        if self.is_master and self.remote_mode:
+        if self.remote_mode:
             self._use_remote_setpoint()
         info = "Whatever info you want to log"
         return info, initialized
