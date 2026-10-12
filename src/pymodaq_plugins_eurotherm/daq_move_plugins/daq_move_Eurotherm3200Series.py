@@ -40,7 +40,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
     is_multiaxes = True
     _axis_names: Union[List[str], Dict[str, int]] = dict(zip([f'Segment_{ind:03.0f}' for ind in range(8)],
                                                                [ind for ind in range(8)]))
-    _controller_units: Union[str, List[str]] = 'K'
+    _controller_units: Union[str, List[str]] = '°C'
     _epsilon: Union[float, List[float]] = 0.1
 
     data_actuator_type = DataActuatorType.DataActuator
@@ -53,6 +53,11 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         {'title': 'ComPort:', 'name': 'port', 'type': 'list', 'limits': list_resources(), 'value': config('eurotherm', 'port')},
         {'title': 'Client Address', 'name': 'clientaddress', 'type': 'int', 'value': config('eurotherm', 'clientaddress')},
         {'title': 'BaudRate:', 'name': 'baudrate', 'type': 'int', 'value': config('eurotherm', 'baudrate'),},
+        {'title': 'PID:', 'name': 'pid', 'type': 'group', 'children': [
+            {'title': 'Proportional band', 'name': 'proportional_band', 'type': 'float', 'value': 1.},
+            {'title': 'Integral time (s)', 'name': 'integral_time', 'type': 'float', 'value': 1.},
+            {'title': 'Derivative time (s)', 'name': 'derivative_time', 'type': 'float', 'value': 1.},
+        ]},
              ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
 
     def ini_attributes(self):
@@ -86,11 +91,8 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
 
     def close(self):
         """Terminate the communication protocol"""
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
         if self.is_master:
-            #  self.controller.your_method_to_terminate_the_communication()  # when writing your own plugin replace this line
-            ...
+            self.controller.adapter.close()
 
     def commit_settings(self, param: Parameter):
         """Apply the consequences of a change of value in the detector settings
@@ -100,17 +102,13 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         param: Parameter
             A given parameter (within detector_settings) whose value has been changed by the user
         """
-        ## TODO for your custom plugin
-        if param.name() == 'axis':
-            self.axis_unit = self.controller.your_method_to_get_correct_axis_unit()
-            # do this only if you can and if the units are not known beforehand, for instance
-            # if the motors connected to the controller are of different type (mm, µm, nm, , etc...)
-            # see BrushlessDCMotor from the thorlabs plugin for an exemple
+        if param.name() in ('proportional_band', 'integral_time', 'derivative_time'):
+            setattr(self.controller, param.name(), param.value())
 
-        elif param.name() == "a_parameter_you've_added_in_self.params":
-           self.controller.your_method_to_apply_this_param_change()
-        else:
-            pass
+    def update_pid(self):
+        """Show the PID parameters of the controller in the settings"""
+        for name in ('proportional_band', 'integral_time', 'derivative_time'):
+            self.settings.child('pid', name).setValue(getattr(self.controller, name))
 
     def ini_stage(self, controller=None):
         """Actuator communication initialization
@@ -135,6 +133,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
             self.controller = controller
             initialized = True
 
+        self.update_pid()
         info = "Whatever info you want to log"
         return info, initialized
 
@@ -149,10 +148,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         value = self.check_bound(value)  #if user checked bounds, the defined bounds are applied here
         self.target_value = value
         value = self.set_position_with_scaling(value)  # apply scaling if the user specified one
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        self.controller.your_method_to_set_an_absolute_value(value.value(self.axis_unit))  # when writing your own plugin replace this line
-        self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
+        self.controller.target_setpoint = value.value(self.axis_unit)
 
     def move_rel(self, value: DataActuator):
         """ Move the actuator to the relative target actuator value defined by value
@@ -163,12 +159,8 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         """
         value = self.check_bound(self.current_value + value) - self.current_value
         self.target_value = value + self.current_value
-        value = self.set_position_relative_with_scaling(value)
-
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        self.controller.your_method_to_set_a_relative_value(value.value(self.axis_unit))  # when writing your own plugin replace this line
-        self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
+        value = self.set_position_with_scaling(self.target_value)
+        self.controller.target_setpoint = value.value(self.axis_unit)
 
     def move_home(self):
         """Call the reference method of the controller"""
@@ -179,13 +171,9 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
 
     def stop_motion(self):
-        """Stop the actuator and emits move_done signal"""
-
-        ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        self.controller.your_method_to_stop_positioning()  # when writing your own plugin replace this line
-        self.emit_status(ThreadCommand('Update_Status', ['Some info you want to log']))
+        """Stop the actuator by setting the setpoint to the current temperature"""
+        self.controller.target_setpoint = self.controller.process_value
 
 
 if __name__ == '__main__':
-    main(__file__)
+    main(__file__, init=False)
