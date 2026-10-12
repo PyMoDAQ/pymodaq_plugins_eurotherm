@@ -51,5 +51,5 @@ Installation instructions
 
 * PyMoDAQ’s version.
 * Operating system’s version.
-* the package nupylab should be installed. As only available on github, make sure you have git installed or install it
-  manually from the source code on https://github.com/hailegroup/nupylab
+* the Eurotherm drivers come from PyMeasure. Until they are released in PyMeasure, they are installed from the
+  PyMoDAQ fork (https://github.com/PyMoDAQ/pymeasure), so make sure you have git installed.

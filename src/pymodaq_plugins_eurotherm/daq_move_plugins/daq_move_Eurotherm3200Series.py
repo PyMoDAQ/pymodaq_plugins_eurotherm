@@ -17,7 +17,8 @@ from pymodaq_gui.parameter import Parameter
 
 from pymodaq_plugins_utils.hardware.serial_ports import list_resources
 
-from nupylab.drivers.eurotherm3216 import Eurotherm3216
+from pymeasure.adapters import SerialAdapter
+from pymeasure.instruments.eurotherm import Eurotherm3216
 
 config = GlobalConfig()
 
@@ -65,8 +66,7 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
         float: The position obtained after scaling conversion.
         """
 
-        pos = DataActuator(data=self.controller.read_float(),  # when writing your own plugin replace this line
-                           units=self.axis_unit)
+        pos = DataActuator(data=self.controller.process_value, units=self.axis_unit)
         pos = self.get_position_with_scaling(pos)
         return pos
 
@@ -127,8 +127,8 @@ class DAQ_Move_Eurotherm3200Series(DAQ_Move_base):
             False if initialization failed otherwise True
         """
         if self.is_master:  # is needed when controller is master
-            self.controller = Eurotherm3216(port=self.settings['port'],
-                                            clientaddress=self.settings['clientaddress'],)
+            adapter = SerialAdapter(self.settings['port'], baudrate=self.settings['baudrate'], timeout=1)
+            self.controller = Eurotherm3216(adapter, address=self.settings['clientaddress'])
             initialized = True
 
         else:
