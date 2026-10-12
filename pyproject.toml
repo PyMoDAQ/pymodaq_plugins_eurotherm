@@ -22,6 +22,7 @@ dependencies = [
 
 authors = [
     {name = "Weber J. Sebastien", email = "sebastien.weber@cnrs.fr"},
+    {name = "Adélaïs Bruel", email = "adelais.bruel@gmail.com"},
 ]
 maintainers = [
     {name = "Weber J. Sebastien", email = "sebastien.weber@cnrs.fr"},

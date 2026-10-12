@@ -26,7 +26,7 @@ Authors
 =======
 
 * Sebastien. J. Weber
-* Other author (myotheremail@xxx.org)
+* Adélaïs Bruel (adelais.bruel@gmail.com)
 
 
 Instruments
