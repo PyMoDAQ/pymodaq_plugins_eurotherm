@@ -16,12 +16,14 @@ dependencies = [
     "pymodaq_utils>=5.3.1",
     "pymodaq_gui>=5.3.0",
     "pymodaq_data>=5.3.0",
-    "nupylab @ git+https://github.com/hailegroup/nupylab.git",
+    "pymeasure @ git+https://github.com/PyMoDAQ/pymeasure.git@feature/eurotherm-drivers",
     "pymodaq_plugins_utils[serial]",
 ]
 
 authors = [
     {name = "Weber J. Sebastien", email = "sebastien.weber@cnrs.fr"},
+    {name = "Adélaïs Bruel", email = "adelais.bruel@gmail.com"},
+    {name = "Pierre-Anne Bausson", email = "bausson.pierreanne@gmail.com"},
 ]
 maintainers = [
     {name = "Weber J. Sebastien", email = "sebastien.weber@cnrs.fr"},
