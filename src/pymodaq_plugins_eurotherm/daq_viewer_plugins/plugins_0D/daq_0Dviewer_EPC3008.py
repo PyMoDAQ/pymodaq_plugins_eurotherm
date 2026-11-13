@@ -25,7 +25,7 @@ class DAQ_0DViewer_EPC3008(DAQ_Viewer_base):
 
     """
     params = comon_parameters+[
-        {'title': 'IP address', 'name': 'ip_address', 'type': 'str', 'value': '134.212.36.218'},
+        {'title': 'IP address', 'name': 'ip_address', 'type': 'str', 'value': 'xxx.xxx.xxx.xxx'},
         {'title': 'Units', 'name': 'units', 'type': 'group', 'children': [
             {'title': 'Temperature', 'name': 'temp', 'type': 'str', 'value': '', 'readonly': True},
             {'title': 'Ramp speed', 'name': 'ramp_speed', 'type': 'str', 'value': '', 'readonly': True}
@@ -57,10 +57,10 @@ class DAQ_0DViewer_EPC3008(DAQ_Viewer_base):
         self.settings.child('units', 'ramp_speed').setValue(str(self.controller.get_sp_rate_units()))
 
         self.dte_signal_temp.emit(DataToExport(name='EPC3008',
-                                               data=[DataFromPlugins(name='Temp (°C)',
+                                               data=[DataFromPlugins(name='Temp (degC)',
                                                                     data=[np.array([0])],
                                                                     dim='Data0D',
-                                                                    labels=['Temp (°C)'])]))
+                                                                    labels=['Temp (degC)'])]))
 
         print(f"Connected to {self.ip}")
         info = f"EPC3008 {self.ip} connected"
@@ -75,8 +75,8 @@ class DAQ_0DViewer_EPC3008(DAQ_Viewer_base):
 
         data = np.array([self.controller.get_pv()])
         self.dte_signal.emit(DataToExport(name='EPC3008',
-                                          data=[DataFromPlugins(name='Temp (°C)', data=data,
-                                                                dim='Data0D', labels=['Temp (°C)'])]))
+                                          data=[DataFromPlugins(name='Temp (degC)', data=data,
+                                                                dim='Data0D', labels=['Temp (degC)'])]))
 
 
 

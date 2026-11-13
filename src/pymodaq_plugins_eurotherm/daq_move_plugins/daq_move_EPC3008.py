@@ -20,14 +20,14 @@ class DAQ_Move_EPC3008(DAQ_Move_base):
     """
     is_multiaxes = False
     _axis_names: Union[List[str], Dict[str, int]] = ['Temperature']
-    _controller_units: Union[str, List[str]] = '°C'
+    _controller_units: Union[str, List[str]] = 'degC'
     _epsilon: Union[float, List[float]] = 0.1
     data_actuator_type = DataActuatorType.DataActuator
 
     params = [
         {'title': 'IP address', 'name': 'ip_address', 'type': 'str', 'value': 'xxx.xxx.xxx.xxx'},
         {'title': 'Ramp params ', 'name': 'ramp_param', 'type': 'group', 'children': [
-            {'title': 'Speed (°C/min)', 'name': 'ramp_speed', 'type': 'int', 'value': 20},
+            {'title': 'Speed (deg/min)', 'name': 'ramp_speed', 'type': 'int', 'value': 20},
             {'title': 'Speed verif', 'name': 'ramp_verif', 'type': 'str', 'value': '', 'readonly': True},
             {'title': 'Ramp unit', 'name': 'ramp_unit', 'type': 'str', 'value': '', 'readonly': True}
             ]},
@@ -106,13 +106,13 @@ class DAQ_Move_EPC3008(DAQ_Move_base):
         value = self.check_bound(value)
         self.target_value = value
         self.controller.set_target_sp(value.value())
-        self.emit_status(ThreadCommand('Update_Status', [f'Setpoint {value.value()} °C']))
+        self.emit_status(ThreadCommand('Update_Status', [f'Setpoint {value.value()} degC']))
 
     def move_rel(self, value: DataActuator):
         value = self.check_bound(self.current_value + value) - self.current_value
         self.target_value = value + self.current_value
         self.controller.set_target_sp(self.target_value.value())
-        self.emit_status(ThreadCommand('Update_Status', [f'Setpoint {self.target_value.value()} °C']))
+        self.emit_status(ThreadCommand('Update_Status', [f'Setpoint {self.target_value.value()} degC']))
 
     def move_home(self):
         #à changer peut être
